@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"mygram/auth"
+	"mygram/campaign"
 	"mygram/handler"
 	"mygram/helper"
 	"mygram/user"
@@ -28,19 +28,12 @@ func main() {
 	userService := user.NewService(userRepository)
 	authService := auth.NewService()
 	userHandler := handler.NewUserHandler(userService, authService)
+	photoRepository := campaign.NewRepository(db)
 
-	// userInput := user.RegisterUserInput{}
-
-	// userInput.Email = "raihan@gmail.com"
-	// userInput.Username = "raihan"
-	// userInput.Age = 10
-	// userInput.Password = "inipassword"
-
-	// userService.RegisterUser(userInput)
+	photoService := campaign.NewService(photoRepository)
+	photoHandler := handler.NewPhotoHandler(photoService)
 
 	db.AutoMigrate(&user.User{})
-
-	// fmt.Println("Database Connection Success")
 
 	router := gin.Default()
 	api := router.Group("/users")
@@ -48,6 +41,10 @@ func main() {
 	api.POST("/login", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailabilty)
 	api.DELETE("/", authMiddleware(authService, userService), userHandler.DeletedUser)
+	api.GET("/photos", photoHandler.GetCampaigns)
+	api.POST("/photo", authMiddleware(authService, userService), photoHandler.CreateImage)
+	api.PUT("/photos/:id", authMiddleware(authService, userService), photoHandler.UpdatedCampaign)
+	api.DELETE("/photo/:id", authMiddleware(authService, userService), photoHandler.DeletePhoto)
 
 	router.Run(":8080")
 }
@@ -55,7 +52,7 @@ func main() {
 func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		fmt.Println(authHeader)
+		// fmt.Println(authHeader)
 		if !strings.Contains(authHeader, "Bearer") {
 			response := helper.APIresponse(http.StatusUnauthorized, nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
@@ -68,14 +65,14 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 			tokenString = arrToken[1]
 		}
 		token, err := authService.ValidasiToken(tokenString)
-		fmt.Println(token, err)
+		// fmt.Println(token, err)
 		if err != nil {
 			response := helper.APIresponse(http.StatusUnauthorized, nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
 			return
 		}
 		claim, ok := token.Claims.(jwt.MapClaims)
-		fmt.Println(claim, ok)
+		// fmt.Println(claim, ok)
 		if !ok || !token.Valid {
 			response := helper.APIresponse(http.StatusUnauthorized, nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
@@ -84,7 +81,7 @@ func authMiddleware(authService auth.Service, userService user.Service) gin.Hand
 		userID := int(claim["user_id"].(float64))
 
 		user, err := userService.GetUserByid(userID)
-		fmt.Println(user, err)
+		// fmt.Println(user, err)
 		if err != nil {
 			response := helper.APIresponse(http.StatusUnauthorized, nil)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
