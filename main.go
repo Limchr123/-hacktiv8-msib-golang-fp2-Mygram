@@ -4,6 +4,7 @@ import (
 	"log"
 	"mygram/auth"
 	"mygram/campaign"
+	"mygram/comment"
 	"mygram/handler"
 	"mygram/helper"
 	"mygram/user"
@@ -29,9 +30,11 @@ func main() {
 	authService := auth.NewService()
 	userHandler := handler.NewUserHandler(userService, authService)
 	photoRepository := campaign.NewRepository(db)
-
 	photoService := campaign.NewService(photoRepository)
 	photoHandler := handler.NewPhotoHandler(photoService)
+	commentRepository := comment.NewRepository(db)
+	commentService := comment.NewService(commentRepository)
+	commentHandler := handler.NewCommentHandler(commentService)
 
 	db.AutoMigrate(&user.User{})
 
@@ -41,10 +44,15 @@ func main() {
 	api.POST("/login", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailabilty)
 	api.DELETE("/", authMiddleware(authService, userService), userHandler.DeletedUser)
-	api.GET("/photos", photoHandler.GetCampaigns)
+	api.GET("/photos", authMiddleware(authService, userService), photoHandler.GetCampaigns)
 	api.POST("/photo", authMiddleware(authService, userService), photoHandler.CreateImage)
 	api.PUT("/photos/:id", authMiddleware(authService, userService), photoHandler.UpdatedCampaign)
 	api.DELETE("/photo/:id", authMiddleware(authService, userService), photoHandler.DeletePhoto)
+	api.GET("/comments", commentHandler.GetComments)
+	api.GET("/photo/:id", authMiddleware(authService, userService), photoHandler.GetCampaign)
+	api.POST("comments", authMiddleware(authService, userService), commentHandler.CreateComment)
+	api.PUT("comments/:id", authMiddleware(authService, userService), commentHandler.UpdateComment)
+	api.DELETE("/comments/:id", authMiddleware(authService, userService), commentHandler.DeletedComment)
 
 	router.Run(":8080")
 }

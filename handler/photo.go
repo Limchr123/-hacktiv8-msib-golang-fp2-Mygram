@@ -58,7 +58,7 @@ func (h *photoHandler) CreateImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterUser(newImg))
+	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(newImg))
 	c.JSON(http.StatusOK, response)
 
 }
@@ -97,7 +97,7 @@ func (h *photoHandler) UpdatedCampaign(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterUser(updatedCampaign))
+	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -125,7 +125,34 @@ func (h *photoHandler) DeletePhoto(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterUser(updatedCampaign))
+	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 
+}
+
+func (h *photoHandler) GetCampaign(c *gin.Context) {
+	var input campaign.GetPhotoDetailInput
+
+	err := c.ShouldBindUri(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"error": errors}
+		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	// currentUser := c.MustGet("currentUser").(user.User)
+	// input.ID = currentUser
+
+	campaignDetail, err := h.campaignService.GetCampaignById(input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"error": errors}
+		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	response := helper.APIresponse(http.StatusOK, campaignDetail)
+	c.JSON(http.StatusOK, response)
 }

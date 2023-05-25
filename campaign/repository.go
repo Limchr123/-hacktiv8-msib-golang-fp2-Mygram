@@ -10,7 +10,6 @@ import (
 type Repository interface {
 	//create User
 	FindAll() ([]Campaign, error)
-	Save(photo Campaign) (Campaign, error)
 	FindById(ID int) (Campaign, error)
 	FindByUserId(userID int) ([]Campaign, error)
 	Update(photo Campaign) (Campaign, error)
@@ -36,18 +35,10 @@ func (r *repository) FindAll() ([]Campaign, error) {
 	return photo, nil
 }
 
-func (r *repository) Save(photo Campaign) (Campaign, error) {
-	err := r.db.Create(&photo).Error
-	if err != nil {
-		return photo, err
-	}
-	return photo, nil
-}
-
 func (r *repository) FindById(ID int) (Campaign, error) {
 	var photo Campaign
 
-	err := r.db.Where("id = ?", ID).Find(&photo).Error
+	err := r.db.Preload("User").Where("id = ?", ID).Find(&photo).Error
 
 	if err != nil {
 		return photo, err

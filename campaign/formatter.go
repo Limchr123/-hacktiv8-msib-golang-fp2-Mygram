@@ -8,7 +8,7 @@ type CampaignFormatter struct {
 	UserId   int    `json:"user_id"`
 }
 
-func FormatterUser(campaign Campaign) CampaignFormatter {
+func FormatterCampaign(campaign Campaign) CampaignFormatter {
 	formatter := CampaignFormatter{
 		ID:       campaign.ID,
 		Title:    campaign.Title,
@@ -17,4 +17,17 @@ func FormatterUser(campaign Campaign) CampaignFormatter {
 		UserId:   campaign.UserId,
 	}
 	return formatter
+}
+
+func FormatCampaigns(campaigns []Campaign) []CampaignFormatter {
+	campaignsFormatter := []CampaignFormatter{}
+
+	for _, campaign := range campaigns {
+		//inisiasi campaignFormatter untuk dimasukkan ke dalam fungsi FormatCampaign diatas agar dibaca
+		//masih kurang lengkap penjelasannya
+		campaignFormatter := FormatterCampaign(campaign)
+		//menggunakan append kalau ada lagi maka masukkan campaignFormatter
+		campaignsFormatter = append(campaignsFormatter, campaignFormatter)
+	}
+	return campaignsFormatter
 }

@@ -2,7 +2,6 @@ package campaign
 
 import (
 	"errors"
-	"fmt"
 )
 
 type Service interface {
@@ -10,6 +9,7 @@ type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
 	UpdateCampaigns(inputID GetPhotoDetailInput, input PhotoInput) (Campaign, error)
 	DeletePhoto(ID int) (Campaign, error)
+	GetCampaignById(input GetPhotoDetailInput) (Campaign, error)
 }
 
 type service struct {
@@ -48,30 +48,17 @@ func (s *service) DeletePhoto(ID int) (Campaign, error) {
 	return photoDel, nil
 }
 
-// func (s *service) SaveAvatar(input PhotoInput, ID int, fileLocation string) (Photo, error) {
-// 	user := Photo{}
+func (s *service) GetCampaignById(input GetPhotoDetailInput) (Campaign, error) {
+	campaign, err := s.repository.FindById(input.ID)
 
-// 	user.Title = input.Title
-// 	user.Caption = input.Caption
+	if err != nil {
+		return campaign, err
+	}
 
-// 	user, err := s.repository.FindById(ID)
-
-// 	if err != nil {
-// 		return user, err
-// 	}
-
-// 	user.PhotoUrl = fileLocation
-
-// 	newPhoto, err := s.repository.CreateImage(user)
-// 	if err != nil {
-// 		return newPhoto, err
-// 	}
-// 	return newPhoto, nil
-
-// }
+	return campaign, nil
+}
 
 func (s *service) GetCampaigns(userID int) ([]Campaign, error) {
-	fmt.Println(userID)
 	if userID != 0 {
 		photo, err := s.repository.FindByUserId(userID)
 		if err != nil {
