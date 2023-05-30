@@ -7,6 +7,7 @@ import (
 	"mygram/comment"
 	"mygram/handler"
 	"mygram/helper"
+	"mygram/sosialMedia"
 	"mygram/user"
 	"net/http"
 	"strings"
@@ -35,24 +36,34 @@ func main() {
 	commentRepository := comment.NewRepository(db)
 	commentService := comment.NewService(commentRepository)
 	commentHandler := handler.NewCommentHandler(commentService)
+	sosialMediaRepository := sosialMedia.NewRepository(db)
+	sosialMediaService := sosialMedia.NewService(sosialMediaRepository)
+	sosialMediaHandler := handler.NewSosmedHandler(sosialMediaService)
 
 	db.AutoMigrate(&user.User{})
 
 	router := gin.Default()
 	api := router.Group("/users")
+	apiPhotos := router.Group("/photos")
+	apiComments := router.Group("/comments")
+	apiSosmed := router.Group("/socialmedias")
 	api.POST("/register", userHandler.RegisterUser)
 	api.POST("/login", userHandler.Login)
-	api.POST("/email_checkers", userHandler.CheckEmailAvailabilty)
+	api.PUT("/:id", authMiddleware(authService, userService), userHandler.UpdatedUser)
 	api.DELETE("/", authMiddleware(authService, userService), userHandler.DeletedUser)
-	api.GET("/photos", authMiddleware(authService, userService), photoHandler.GetCampaigns)
-	api.POST("/photo", authMiddleware(authService, userService), photoHandler.CreateImage)
-	api.PUT("/photos/:id", authMiddleware(authService, userService), photoHandler.UpdatedCampaign)
-	api.DELETE("/photo/:id", authMiddleware(authService, userService), photoHandler.DeletePhoto)
-	api.GET("/comments", commentHandler.GetComments)
-	api.GET("/photo/:id", authMiddleware(authService, userService), photoHandler.GetCampaign)
-	api.POST("comments", authMiddleware(authService, userService), commentHandler.CreateComment)
-	api.PUT("comments/:id", authMiddleware(authService, userService), commentHandler.UpdateComment)
-	api.DELETE("/comments/:id", authMiddleware(authService, userService), commentHandler.DeletedComment)
+	apiPhotos.GET("/", authMiddleware(authService, userService), photoHandler.GetCampaigns)
+	apiPhotos.POST("/", authMiddleware(authService, userService), photoHandler.CreateImage)
+	apiPhotos.PUT("/:id", authMiddleware(authService, userService), photoHandler.UpdatedCampaign)
+	apiPhotos.DELETE("/:id", authMiddleware(authService, userService), photoHandler.DeletePhoto)
+	// api.GET("/comments", commentHandler.GetComments)
+	apiComments.GET("/", authMiddleware(authService, userService), commentHandler.GetComments)
+	apiComments.POST("/", authMiddleware(authService, userService), commentHandler.CreateComment)
+	apiComments.PUT("/:id", authMiddleware(authService, userService), commentHandler.UpdateComment)
+	apiComments.DELETE("/:id", authMiddleware(authService, userService), commentHandler.DeletedComment)
+	apiSosmed.POST("/", authMiddleware(authService, userService), sosialMediaHandler.CreateSosmed)
+	apiSosmed.GET("/", authMiddleware(authService, userService), sosialMediaHandler.GetSosmed)
+	apiSosmed.PUT("/:id", authMiddleware(authService, userService), sosialMediaHandler.UpdateSosmed)
+	apiSosmed.DELETE("/:id", authMiddleware(authService, userService), sosialMediaHandler.DeletedSosmed)
 
 	router.Run(":8080")
 }

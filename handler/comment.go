@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"mygram/comment"
 	"mygram/helper"
 	"mygram/user"
@@ -23,14 +22,14 @@ func (h *commentHandler) GetComments(c *gin.Context) {
 	userID, _ := strconv.Atoi(c.Query("user_id"))
 	photoID, _ := strconv.Atoi(c.Query("photo_id"))
 
-	comment, err := h.commentService.GetComment(userID, photoID)
-	fmt.Println(userID, photoID)
+	newComment, err := h.commentService.GetComment(userID, photoID)
 	if err != nil {
 		response := helper.APIresponse(http.StatusBadRequest, "Eror to get Comments")
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, comment)
+	formatter := comment.FormatterGetComment(newComment)
+	response := helper.APIresponse(http.StatusOK, formatter)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -95,7 +94,7 @@ func (h *commentHandler) UpdateComment(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, comment.FormatterComment(updatedComment))
+	response := helper.APIresponse(http.StatusOK, comment.FormatterUpdated(updatedComment))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -114,12 +113,10 @@ func (h *commentHandler) DeletedComment(c *gin.Context) {
 
 	deletedComment, err := h.commentService.DeleteComment(inputID.ID)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"error": errors}
-		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
+		response := helper.APIresponse(http.StatusUnprocessableEntity, deletedComment)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, comment.FormatterComment(deletedComment))
+	response := helper.APIresponse(http.StatusOK, "Your comment has been succesfully deleted")
 	c.JSON(http.StatusOK, response)
 }

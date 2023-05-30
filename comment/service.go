@@ -27,6 +27,7 @@ func (s *service) GetComment(userID int, photoID int) ([]Comment, error) {
 		return comment, err
 	}
 	return comment, nil
+
 }
 
 func (s *service) CreateComment(input CommentInput) (Comment, error) {

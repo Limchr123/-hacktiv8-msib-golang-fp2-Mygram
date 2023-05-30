@@ -36,13 +36,8 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	token, err := h.authService.GenerateToken(newUser.ID)
-	if err != nil {
-		response := helper.APIresponse(http.StatusUnprocessableEntity, nil)
-		c.JSON(http.StatusUnprocessableEntity, response)
-		return
-	}
-	formatter := user.FormatterUser(newUser, token)
+
+	formatter := user.FormatterRegister(newUser)
 	response := helper.APIresponse(http.StatusOK, formatter)
 	c.JSON(http.StatusOK, response)
 }
@@ -71,16 +66,15 @@ func (h *userHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	formatter := user.FormatterUser(loggedinUser, token)
+	formatter := user.FormatterUser(token)
 	response := helper.APIresponse(http.StatusOK, formatter)
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *userHandler) CheckEmailAvailabilty(c *gin.Context) {
-	var input user.CheckEmailInput
+func (h *userHandler) UpdatedUser(c *gin.Context) {
+	var inputID user.DeletedUser
 
-	err := c.ShouldBindJSON(&input)
-
+	err := c.ShouldBindUri(&inputID)
 	if err != nil {
 		errors := helper.FormatValidationError(err)
 		errorMessage := gin.H{"errors": errors}
@@ -89,26 +83,34 @@ func (h *userHandler) CheckEmailAvailabilty(c *gin.Context) {
 		return
 	}
 
-	IsEmailAvailable, err := h.userService.IsEmaillAvailabilty(input)
+	var inputData user.UpdatedUser
+
+	err = c.ShouldBindJSON(&inputData)
 	if err != nil {
-		response := helper.APIresponse(http.StatusUnprocessableEntity, nil)
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
 
-	// data := gin.H{
-	// 	"is_available" : IsEmailAvailable,
-	// }
-	metaMessage := "Email has been registered"
+	currentUser := c.MustGet("currentUser").(user.User)
+	//ini inisiasi userID yang mana ingin mendapatkan id si user
+	inputData.User.ID = currentUser.ID
 
-	if IsEmailAvailable {
-		metaMessage = "Email is available"
+	newUser, err := h.userService.UpdatedUser(inputID, inputData)
+
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{"errors": errors}
+		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
 	}
-	// response := helper.APIresponse(metaMessage, http.StatusOK )
-	// c.JSON(http.StatusOK, response)
-
-	response := helper.APIresponse(http.StatusOK, metaMessage)
+	formatter := user.FormatterUpdateUser(newUser)
+	response := helper.APIresponse(http.StatusOK, formatter)
 	c.JSON(http.StatusOK, response)
+
 }
 
 func (h *userHandler) DeletedUser(c *gin.Context) {
@@ -134,7 +136,8 @@ func (h *userHandler) DeletedUser(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatterUser(newDel, "nil")
-	response := helper.APIresponse(http.StatusOK, formatter)
+	// responseDeleted := "Your account has been successfully deleted"
+
+	response := helper.APIresponse(http.StatusOK, "Your account has been successfully deleted")
 	c.JSON(http.StatusOK, response)
 }

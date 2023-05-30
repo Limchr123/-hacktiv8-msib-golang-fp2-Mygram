@@ -31,7 +31,9 @@ func (h *photoHandler) GetCampaigns(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, photo)
+
+	formatter := campaign.FormatterGetCampaign(photo)
+	response := helper.APIresponse(http.StatusOK, formatter)
 	c.JSON(http.StatusOK, response)
 
 }
@@ -50,7 +52,7 @@ func (h *photoHandler) CreateImage(c *gin.Context) {
 
 	currentUser := c.MustGet("currentUser").(user.User)
 	// userId := currentUser.ID
-	input.User = currentUser
+	input.User.ID = currentUser.ID
 
 	newImg, err := h.campaignService.CreateImage(input)
 	if err != nil {
@@ -58,7 +60,7 @@ func (h *photoHandler) CreateImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(newImg))
+	response := helper.APIresponse(http.StatusOK, campaign.FormatterCreateCampaign(newImg))
 	c.JSON(http.StatusOK, response)
 
 }
@@ -97,7 +99,7 @@ func (h *photoHandler) UpdatedCampaign(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(updatedCampaign))
+	response := helper.APIresponse(http.StatusOK, campaign.FormatterUpdatedCampaign(updatedCampaign))
 	c.JSON(http.StatusOK, response)
 }
 
@@ -119,13 +121,12 @@ func (h *photoHandler) DeletePhoto(c *gin.Context) {
 
 	updatedCampaign, err := h.campaignService.DeletePhoto(inputID.ID)
 	if err != nil {
-		errors := helper.FormatValidationError(err)
-		errorMessage := gin.H{"errors": errors}
-		response := helper.APIresponse(http.StatusUnprocessableEntity, errorMessage)
+		response := helper.APIresponse(http.StatusUnprocessableEntity, updatedCampaign)
 		c.JSON(http.StatusUnprocessableEntity, response)
 		return
 	}
-	response := helper.APIresponse(http.StatusOK, campaign.FormatterCampaign(updatedCampaign))
+
+	response := helper.APIresponse(http.StatusOK, "Your photo has been successfully deleted")
 	c.JSON(http.StatusOK, response)
 
 }
