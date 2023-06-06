@@ -38,7 +38,7 @@ func (r *repository) FindAll() ([]Campaign, error) {
 func (r *repository) FindById(ID int) (Campaign, error) {
 	var photo Campaign
 
-	err := r.db.Preload("User").Where("id = ?", ID).Find(&photo).Error
+	err := r.db.Preload("User").Where("id = ?", ID).First(&photo).Error
 
 	if err != nil {
 		return photo, err
