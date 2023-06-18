@@ -1,30 +1,27 @@
 package main
 
 import (
-	"log"
 	"mygram/auth"
 	"mygram/campaign"
 	"mygram/comment"
+	"mygram/database"
 	"mygram/handler"
 	"mygram/helper"
 	"mygram/sosialMedia"
 	"mygram/user"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 )
 
 func main() {
 
-	dsn := "root:@tcp(127.0.0.1:3306)/tugas2?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("Db Connestion Error")
-	}
+	var port = os.Getenv("PORT")
+
+	db := database.GetDataBaseInstance()
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
@@ -65,7 +62,7 @@ func main() {
 	apiSosmed.PUT("/:id", authMiddleware(authService, userService), sosialMediaHandler.UpdateSosmed)
 	apiSosmed.DELETE("/:id", authMiddleware(authService, userService), authService.SosmedAuthorization(), sosialMediaHandler.DeletedSosmed)
 
-	router.Run(":8080")
+	router.Run(":" + port)
 }
 
 func authMiddleware(authService auth.Service, userService user.Service) gin.HandlerFunc {
