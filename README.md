@@ -7,3 +7,4 @@ Anggota Kelompok
 - Liem Charlie
 
 Link Deployment :
+http://fp2-mygram-kelompok6-production.up.railway.app
